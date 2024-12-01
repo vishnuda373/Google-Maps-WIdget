@@ -1,4 +1,8 @@
-let map;
+
+
+  $(document).ready(function() {
+
+    let map;
 let autocomplete;
 let geocoder;
 const markers = []; // Array to store all markers
@@ -179,8 +183,7 @@ document
     });
   });
 
-
-  $(document).ready(function() {
+  
     // alert("main.js running...")
     ZOHO.CREATOR.init()
         .then(function() {
