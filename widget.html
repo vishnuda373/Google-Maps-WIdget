@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps with Pre-Filled Address</title>
+    <style>
+        /* Fullscreen map styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        #add-location-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 999;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #address-form {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #address-form input, #address-form button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #close-btn, #submit-form-btn {
+            margin: 10px 5px 0 0;
+            display: inline-block;
+            width: 48%;
+        }
+        #close-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+        }
+        #submit-form-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Add Location Button -->
+    <button id="add-location-btn">Add Location</button>
+
+    <!-- Address Form -->
+    <div id="address-form">
+        <h3>Enter Address</h3>
+        <input type="text" id="input-address" placeholder="Enter Address" />
+        <input type="text" id="line1" placeholder="Address Line 1" readonly />
+        <input type="text" id="line2" placeholder="Address Line 2" readonly />
+        <input type="text" id="city" placeholder="City" readonly />
+        <input type="text" id="state" placeholder="State" readonly />
+        <input type="text" id="country" placeholder="Country" readonly />
+        <input type="text" id="pincode" placeholder="Pincode" readonly />
+        <button id="submit-form-btn">Submit</button>
+        <button id="close-btn">Close</button>
+    </div>
+
+    <!-- Google Maps API -->
+    <script>
+        let map;
+        let autocomplete;
+        let marker;
+        let geocoder;
+
+        function initMap() {
+            // Initialize the map
+            const location = { lat: 37.7749, lng: -122.4194 }; // Example: San Francisco
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: location,
+            });
+
+            // Initialize geocoder
+            geocoder = new google.maps.Geocoder();
+
+            // Add default marker
+            marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: "San Francisco",
+            });
+
+            // Initialize autocomplete for the input field
+            const input = document.getElementById("input-address");
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ["geocode"], // Suggest only geocoded addresses
+            });
+
+            // When an address is selected, auto-populate the form
+            autocomplete.addListener("place_changed", handlePlaceSelect);
+
+            // Add a click listener to the map
+            map.addListener("click", (e) => {
+                handleMapClick(e.latLng);
+            });
+        }
+
+        // Handle place selection from autocomplete
+        function handlePlaceSelect() {
+            const place = autocomplete.getPlace();
+
+            if (!place.geometry || !place.address_components) {
+                alert("No details available for the selected location.");
+                return;
+            }
+
+            populateForm(place.address_components, place.formatted_address);
+        }
+
+        // Handle map click event
+        function handleMapClick(latLng) {
+            geocoder.geocode({ location: latLng }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    // Move the marker to the clicked location
+                    if (marker) {
+                        marker.setMap(null);
+                    }
+                    marker = new google.maps.Marker({
+                        position: latLng,
+                        map: map,
+                        title: "Selected Location",
+                    });
+
+                    // Populate the form with the clicked location's address
+                    populateForm(results[0].address_components, results[0].formatted_address);
+
+                    // Center the map on the clicked location
+                    map.setCenter(latLng);
+
+                    // Show the form
+                    document.getElementById("address-form").style.display = "block";
+                } else {
+                    alert("No address found for the selected location.");
+                }
+            });
+        }
+
+        // Populate the form fields with address components
+        function populateForm(components, formattedAddress) {
+            let addressLine1 = "";
+            let addressLine2 = "";
+            let city = "";
+            let state = "";
+            let country = "";
+            let postalCode = "";
+
+            components.forEach((component) => {
+                if (component.types.includes("street_number")) {
+                    addressLine1 += component.long_name + " ";
+                }
+                if (component.types.includes("route")) {
+                    addressLine1 += component.long_name;
+                }
+                if (component.types.includes("sublocality") || component.types.includes("neighborhood")) {
+                    addressLine2 = component.long_name;
+                }
+                if (component.types.includes("locality")) {
+                    city = component.long_name;
+                }
+                if (component.types.includes("administrative_area_level_1")) {
+                    state = component.long_name;
+                }
+                if (component.types.includes("country")) {
+                    country = component.long_name;
+                }
+                if (component.types.includes("postal_code")) {
+                    postalCode = component.long_name;
+                }
+            });
+
+            document.getElementById("input-address").value = formattedAddress;
+            document.getElementById("line1").value = addressLine1;
+            document.getElementById("line2").value = addressLine2;
+            document.getElementById("city").value = city;
+            document.getElementById("state").value = state;
+            document.getElementById("country").value = country;
+            document.getElementById("pincode").value = postalCode;
+        }
+
+        // Clear the form fields
+        function clearForm() {
+            document.getElementById("input-address").value = "";
+            document.getElementById("line1").value = "";
+            document.getElementById("line2").value = "";
+            document.getElementById("city").value = "";
+            document.getElementById("state").value = "";
+            document.getElementById("country").value = "";
+            document.getElementById("pincode").value = "";
+        }
+
+        // Handle "Add Location" Button
+        document.getElementById("add-location-btn").addEventListener("click", function () {
+            clearForm();
+            document.getElementById("address-form").style.display = "block";
+        });
+
+        // Handle Close Button
+        document.getElementById("close-btn").addEventListener("click", function () {
+            clearForm();
+            document.getElementById("address-form").style.display = "none";
+        });
+
+        // Handle Submit Button
+        document.getElementById("submit-form-btn").addEventListener("click", function () {
+            alert("Location submitted successfully!");
+            clearForm();
+            document.getElementById("address-form").style.display = "none";
+        });
+    </script>
+
+    <!-- Load Google Maps API with Places Library -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTtCaQM5rbYtALk7SS23GJ3utO5M3IDZU&libraries=places&callback=initMap"></script>
+</body>
+</html>
