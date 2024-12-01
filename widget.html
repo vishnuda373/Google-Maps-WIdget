@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Maps with Custom Pop-Up</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+    <script src="https://js.zohostatic.com/creator/widgets/version/1.0/widgetsdk-min.js"></script>
     <style>
         /* Fullscreen map styling */
         body, html {
@@ -287,6 +290,27 @@
                     showPopup("Failed to add location: " + status);
                 }
             });
+        });
+        ZOHO.CREATOR.init()
+        .then(function() {
+            var queryParams = ZOHO.CREATOR.UTIL.getQueryParams();
+            console.log(queryParams);
+
+            var config = { 
+                reportName : "All_Guest_Profiles", 
+                criteria : '(Email == \"' + queryParams.loginUser + '\")',
+                page : 1,
+                pageSize : 10
+            }
+            
+            ZOHO.CREATOR.API.getAllRecords(config).then(function(response){
+                var recordArr = response.data;
+                console.log(recordArr);
+                for(var index in recordArr){
+                    console.log(recordArr[index]);
+                }	
+            });
+
         });
     </script>
 
