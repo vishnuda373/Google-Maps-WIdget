@@ -297,21 +297,20 @@
         .then(function() {
             var queryParams = ZOHO.CREATOR.UTIL.getQueryParams();
             console.log(queryParams);
-
-            // var config = { 
-            //     reportName : "All_Guest_Profiles", 
-            //     criteria : '(Email == \"' + queryParams.loginUser + '\")',
-            //     page : 1,
-            //     pageSize : 10
-            // }
-            
-            // ZOHO.CREATOR.API.getAllRecords(config).then(function(response){
-            //     var recordArr = response.data;
-            //     console.log(recordArr);
-            //     for(var index in recordArr){
-            //         console.log(recordArr[index]);
-            //     }	
-            // });
+            formData = {
+              "data":{
+                "Data" : "example"
+              }
+            }
+            var config = { 
+                   formName : "Form_3", 
+                   data : formData 
+            } 
+            ZOHO.CREATOR.API.addRecord(config).then(function(response){ 
+                if(response.code == 3000){
+                 console.log("Record added successfully");
+                }
+            });
 
         });
     </script>
