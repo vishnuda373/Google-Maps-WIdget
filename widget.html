@@ -311,25 +311,25 @@
             }
           });
         });
-      ZOHO.CREATOR.init().then(function () {
-        var queryParams = ZOHO.CREATOR.UTIL.getQueryParams();
-        console.log(queryParams);
+      // ZOHO.CREATOR.init().then(function () {
+      //   var queryParams = ZOHO.CREATOR.UTIL.getQueryParams();
+      //   console.log(queryParams);
 
-        var config = {
-          reportName: "All_Guest_Profiles",
-          criteria: '(Email == "' + queryParams.loginUser + '")',
-          page: 1,
-          pageSize: 10,
-        };
+      //   var config = {
+      //     reportName: "All_Guest_Profiles",
+      //     criteria: '(Email == "' + queryParams.loginUser + '")',
+      //     page: 1,
+      //     pageSize: 10,
+      //   };
 
-        ZOHO.CREATOR.API.getAllRecords(config).then(function (response) {
-          var recordArr = response.data;
-          console.log(recordArr);
-          for (var index in recordArr) {
-            console.log(recordArr[index]);
-          }
-        });
-      });
+      //   ZOHO.CREATOR.API.getAllRecords(config).then(function (response) {
+      //     var recordArr = response.data;
+      //     console.log(recordArr);
+      //     for (var index in recordArr) {
+      //       console.log(recordArr[index]);
+      //     }
+      //   });
+      // });
     </script>
 
     <!-- Load Google Maps API with Places Library -->
