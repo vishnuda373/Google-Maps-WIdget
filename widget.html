@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps with Pre-Filled Address</title>
+    <title>Google Maps with Custom Pop-Up</title>
     <style>
         /* Fullscreen map styling */
         body, html {
@@ -65,6 +65,28 @@
             cursor: pointer;
             padding: 10px;
         }
+        /* Pop-Up Styling */
+        #popup {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            font-size: 16px;
+            animation: fadeInOut 3s forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -88,12 +110,15 @@
         <button id="close-btn">Close</button>
     </div>
 
+    <!-- Custom Pop-Up Notification -->
+    <div id="popup">Location added successfully!</div>
+
     <!-- Google Maps API -->
     <script>
         let map;
         let autocomplete;
-        let marker;
         let geocoder;
+        const markers = []; // Array to store all markers
 
         function initMap() {
             // Initialize the map
@@ -105,13 +130,6 @@
 
             // Initialize geocoder
             geocoder = new google.maps.Geocoder();
-
-            // Add default marker
-            marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: "San Francisco",
-            });
 
             // Initialize autocomplete for the input field
             const input = document.getElementById("input-address");
@@ -133,7 +151,7 @@
             const place = autocomplete.getPlace();
 
             if (!place.geometry || !place.address_components) {
-                alert("No details available for the selected location.");
+                showPopup("No details available for the selected location.");
                 return;
             }
 
@@ -144,16 +162,6 @@
         function handleMapClick(latLng) {
             geocoder.geocode({ location: latLng }, (results, status) => {
                 if (status === "OK" && results[0]) {
-                    // Move the marker to the clicked location
-                    if (marker) {
-                        marker.setMap(null);
-                    }
-                    marker = new google.maps.Marker({
-                        position: latLng,
-                        map: map,
-                        title: "Selected Location",
-                    });
-
                     // Populate the form with the clicked location's address
                     populateForm(results[0].address_components, results[0].formatted_address);
 
@@ -163,7 +171,7 @@
                     // Show the form
                     document.getElementById("address-form").style.display = "block";
                 } else {
-                    alert("No address found for the selected location.");
+                    showPopup("No address found for the selected location.");
                 }
             });
         }
@@ -221,6 +229,26 @@
             document.getElementById("pincode").value = "";
         }
 
+        // Add a marker to the map
+        function addMarker(latLng, title) {
+            const marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                title: title,
+            });
+            markers.push(marker); // Store marker in the array
+        }
+
+        // Show a pop-up notification
+        function showPopup(message) {
+            const popup = document.getElementById("popup");
+            popup.textContent = message;
+            popup.style.display = "block";
+            setTimeout(() => {
+                popup.style.display = "none";
+            }, 3000); // Hide after 3 seconds
+        }
+
         // Handle "Add Location" Button
         document.getElementById("add-location-btn").addEventListener("click", function () {
             clearForm();
@@ -235,9 +263,30 @@
 
         // Handle Submit Button
         document.getElementById("submit-form-btn").addEventListener("click", function () {
-            alert("Location submitted successfully!");
-            clearForm();
-            document.getElementById("address-form").style.display = "none";
+            const address = document.getElementById("input-address").value;
+            if (!address) {
+                showPopup("Please enter or select an address.");
+                return;
+            }
+
+            // Geocode the address to get coordinates
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === "OK") {
+                    const location = results[0].geometry.location;
+
+                    // Add marker for the submitted location
+                    addMarker(location, "New Location");
+
+                    // Center the map on the submitted location
+                    map.setCenter(location);
+
+                    showPopup("Location added successfully!");
+                    clearForm();
+                    document.getElementById("address-form").style.display = "none";
+                } else {
+                    showPopup("Failed to add location: " + status);
+                }
+            });
         });
     </script>
 
