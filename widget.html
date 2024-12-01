@@ -293,8 +293,12 @@
                 }
             });
         });
+        console.log("Before ZOHO.CREATOR.init()");
+
         ZOHO.CREATOR.init()
         .then(function() {
+          console.log("ZOHO.CREATOR initialized");
+
             var queryParams = ZOHO.CREATOR.UTIL.getQueryParams();
             console.log(queryParams);
             formData = {
